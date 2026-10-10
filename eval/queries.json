@@ -1,0 +1,22 @@
+[
+  {"query": "无糖饮料", "expected_ids": ["SKU-0001", "SKU-0003", "SKU-0006"]},
+  {"query": "可口可乐", "expected_ids": ["SKU-0001", "SKU-0002"]},
+  {"query": "提神醒脑的饮料", "expected_ids": ["SKU-0004", "SKU-0005"]},
+  {"query": "辣条", "expected_ids": ["SKU-0012"]},
+  {"query": "薯片", "expected_ids": ["SKU-0007", "SKU-0008"]},
+  {"query": "牛奶", "expected_ids": ["SKU-0013", "SKU-0009"]},
+  {"query": "儿童零食", "expected_ids": ["SKU-0016"]},
+  {"query": "无糖", "expected_ids": ["SKU-0001", "SKU-0003", "SKU-0006", "SKU-0023"]},
+  {"query": "健康低脂零食", "expected_ids": ["SKU-0011", "SKU-0023"]},
+  {"query": "咖啡", "expected_ids": ["SKU-0005"]},
+  {"query": "方便面", "expected_ids": ["SKU-0021", "SKU-0022"]},
+  {"query": "牙膏", "expected_ids": ["SKU-0019"]},
+  {"query": "洗发水去屑", "expected_ids": ["SKU-0020"]},
+  {"query": "酸奶", "expected_ids": ["SKU-0014", "SKU-0015"]},
+  {"query": "补钙", "expected_ids": ["SKU-0013", "SKU-0016"]},
+  {"query": "全麦面包", "expected_ids": ["SKU-0023"]},
+  {"query": "5元以下的饮料", "expected_ids": ["SKU-0001", "SKU-0002", "SKU-0003"]},
+  {"query": "巧克力", "expected_ids": ["SKU-0009"]},
+  {"query": "坚果", "expected_ids": ["SKU-0011"]},
+  {"query": "早餐", "expected_ids": ["SKU-0013", "SKU-0023", "SKU-0024"]}
+]
