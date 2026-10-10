@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from src.data_model import Product
+from src.ingestion import tokenize
 
 
 @dataclass
@@ -37,3 +38,11 @@ def rrf_fuse(ranked_lists: list[list[str]], k: int = 60) -> list[str]:
         for rank, doc_id in enumerate(ranked):
             scores[doc_id] = scores.get(doc_id, 0.0) + 1.0 / (k + rank + 1)
     return sorted(scores, key=lambda d: (-scores[d], d))
+
+
+def bm25_search(query: str, index, k: int = 30) -> list[str]:
+    """BM25 字面召回：返回 BM25 分降序的商品 id 列表。"""
+    tokens = tokenize(query)
+    scores = index.bm25.get_scores(tokens)
+    order = sorted(range(len(scores)), key=lambda i: -scores[i])
+    return [index.products[i].id for i in order[:k]]

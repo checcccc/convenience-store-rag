@@ -1,4 +1,8 @@
-from src.retrieval import FilterConstraints, filter_products, rrf_fuse
+import types
+
+from rank_bm25 import BM25Okapi
+
+from src.retrieval import FilterConstraints, bm25_search, filter_products, rrf_fuse
 
 
 def test_filter_by_category(sample_products):
@@ -30,3 +34,13 @@ def test_rrf_fuse_dedupes():
     assert len(result) == 3
     assert result[0] == "a"
     assert len(set(result)) == 3
+
+
+def test_bm25_search_ranking(sample_products):
+    corpus = [
+        ["可乐", "饮料"] if "可乐" in p.name else ["其他", "商品"]
+        for p in sample_products
+    ]
+    index = types.SimpleNamespace(bm25=BM25Okapi(corpus), products=sample_products)
+    result = bm25_search("可乐", index, k=30)
+    assert set(result[:2]) == {"SKU-0001", "SKU-0002"}
