@@ -39,10 +39,26 @@ tests/                   # 单元测试（FakeEmbedder/FakeClient，无需模型
 ```bash
 pip install -r requirements.txt
 
-# 运行 CLI（需先设置国内 LLM 环境变量，首次运行会下载 BGE 模型）
+# 首次运行会下载 BGE 模型（国内建议用镜像加速）
+$env:HF_ENDPOINT = "https://hf-mirror.com"
+```
+
+### 方式一：离线跑（无需任何 key，开箱即用）
+
+不设 `LLM_API_KEY` 即可跑通完整检索链路（语义 + 关键词召回），小结为确定性文案：
+
+```bash
+python -m src.app "无糖、不含咖啡因的饮料"
+```
+
+### 方式二：接入国内 LLM（完整效果）
+
+设置 key 后，检索会加入 LLM 结构化约束抽取（分类/品牌/价格过滤）与自然语言小结：
+
+```bash
 $env:LLM_BASE_URL = "https://api.deepseek.com"
 $env:LLM_API_KEY  = "你的 key"
-python -m src.app "无糖、不含咖啡因的饮料"
+python -m src.app "5元以下的无糖饮料"
 ```
 
 输出形如：
