@@ -6,10 +6,23 @@ from src.ingestion import build_index
 from src.retrieval import (
     FilterConstraints,
     bm25_search,
+    extract_constraints,
     filter_products,
     rrf_fuse,
+    search,
     vector_search,
 )
+
+
+def _fake_client(content: str):
+    msg = types.SimpleNamespace(content=content)
+    choice = types.SimpleNamespace(message=msg)
+    resp = types.SimpleNamespace(choices=[choice])
+    return types.SimpleNamespace(
+        chat=types.SimpleNamespace(
+            completions=types.SimpleNamespace(create=lambda **kw: resp)
+        )
+    )
 
 
 def test_filter_by_category(sample_products):
@@ -57,3 +70,32 @@ def test_vector_search_ordering(sample_products, fake_embedder):
     index = build_index(sample_products, fake_embedder)
     result = vector_search("零度可乐", index, k=3)
     assert result[0] == "SKU-0001"
+
+
+def test_extract_constraints_valid():
+    client = _fake_client('{"category_l1": "饮料", "price_max": 5}')
+    c = extract_constraints("5元以下的饮料", client)
+    assert c.category_l1 == "饮料"
+    assert c.price_max == 5.0
+    assert c.category_l2 is None
+
+
+def test_extract_constraints_malformed():
+    client = _fake_client("这不是JSON")
+    c = extract_constraints("随便", client)
+    assert c == FilterConstraints()
+
+
+def test_search_filter_then_rank(sample_products, fake_embedder):
+    index = build_index(sample_products, fake_embedder)
+    client = _fake_client('{"category_l1": "饮料"}')
+    result = search("饮料", index, client, top_n=2)
+    assert result
+    assert len(result) <= 2
+    assert all(p.category_l1 == "饮料" for p in result)
+
+
+def test_search_empty_query(sample_products, fake_embedder):
+    index = build_index(sample_products, fake_embedder)
+    result = search("   ", index, None)
+    assert result == []

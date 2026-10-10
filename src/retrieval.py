@@ -1,5 +1,6 @@
-"""检索层：结构化过滤、向量/BM25 召回、RRF 融合。"""
+"""检索层：查询解析、结构化过滤、向量/BM25 召回、RRF 融合、编排。"""
 
+import json
 from dataclasses import dataclass
 
 from src.data_model import Product
@@ -54,3 +55,55 @@ def vector_search(query: str, index, k: int = 30) -> list[str]:
     n = min(k, index.collection.count())
     res = index.collection.query(query_embeddings=q, n_results=n)
     return res["ids"][0]
+
+
+def extract_constraints(query: str, client) -> FilterConstraints:
+    """用 LLM 从 query 抽取筛选条件；任何异常回退为空约束（全量召回）。"""
+    system = (
+        "从用户需求中抽取商品筛选条件，只输出 JSON，字段可为 null："
+        "category_l1（大类）、category_l2（小类）、brand（品牌）、"
+        "price_min（最低价，数字）、price_max（最高价，数字）。"
+    )
+    try:
+        resp = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": query},
+            ],
+            temperature=0.0,
+            response_format={"type": "json_object"},
+        )
+        data = json.loads(resp.choices[0].message.content)
+    except Exception:
+        return FilterConstraints()
+
+    def _to_float(v):
+        try:
+            return float(v) if v is not None else None
+        except (TypeError, ValueError):
+            return None
+
+    return FilterConstraints(
+        category_l1=data.get("category_l1") or None,
+        category_l2=data.get("category_l2") or None,
+        brand=data.get("brand") or None,
+        price_min=_to_float(data.get("price_min")),
+        price_max=_to_float(data.get("price_max")),
+    )
+
+
+def search(query: str, index, client, top_n: int = 5) -> list[Product]:
+    """filter-then-rank 编排：空白 query 返回空；硬过滤 → 池内向量+BM25 → RRF → top_n。"""
+    if not query.strip():
+        return []
+    constraints = extract_constraints(query, client)
+    pool = filter_products(index.products, constraints)
+    if not pool:
+        return []
+    pool_ids = {p.id for p in pool}
+    vector_ids = [i for i in vector_search(query, index, k=30) if i in pool_ids]
+    bm25_ids = [i for i in bm25_search(query, index, k=30) if i in pool_ids]
+    fused = rrf_fuse([vector_ids, bm25_ids])
+    by_id = {p.id: p for p in index.products}
+    return [by_id[i] for i in fused[:top_n]]
