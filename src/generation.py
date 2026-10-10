@@ -7,7 +7,9 @@ from src.data_model import Product
 
 SYSTEM_PROMPT = (
     "你是便利店商品助手。只能基于给定给你的商品作答，"
-    "绝不能编造给定列表之外的商品或信息。请输出 JSON。"
+    "绝不能编造给定列表之外的商品或信息。"
+    "请用一句话总结这些商品，并严格只输出如下 JSON："
+    '{"summary": "一句话小结"}'
 )
 
 

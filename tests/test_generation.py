@@ -7,6 +7,7 @@ def test_build_messages_contains_system_and_products(sample_products):
     messages = build_messages("无糖饮料", sample_products[:2])
     assert messages[0]["role"] == "system"
     assert "绝不能编造" in messages[0]["content"]
+    assert "summary" in messages[0]["content"]
     user = messages[1]["content"]
     assert "无糖饮料" in user
     for p in sample_products[:2]:
