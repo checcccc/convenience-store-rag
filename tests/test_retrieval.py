@@ -2,6 +2,7 @@ import types
 
 from rank_bm25 import BM25Okapi
 
+from src.data_model import Product
 from src.ingestion import build_index
 from src.retrieval import (
     FilterConstraints,
@@ -105,3 +106,23 @@ def test_extract_constraints_valid_json_non_object():
     client = _fake_client("null")
     c = extract_constraints("随便", client)
     assert c == FilterConstraints()
+
+
+def test_search_filter_then_rank_not_dropped():
+    products = [
+        Product(f"SKU-N{i:03d}", f"商品{i}", "日用品", "杂项", "杂牌", 1.0, "", [], "")
+        for i in range(35)
+    ] + [
+        Product(f"SKU-D{i:03d}", f"饮料{i}", "饮料", "碳酸", "牌", 1.0, "", [], "")
+        for i in range(5)
+    ]
+
+    class Embedder:
+        def encode(self, texts):
+            return [[1.0, 0.0] if "商品" in t else [0.0, 1.0] for t in texts]
+
+    index = build_index(products, Embedder())
+    client = _fake_client('{"category_l1": "饮料"}')
+    result = search("商品", index, client, top_n=5)
+    assert len(result) == 5
+    assert all(p.category_l1 == "饮料" for p in result)

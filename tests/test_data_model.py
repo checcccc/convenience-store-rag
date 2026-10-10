@@ -54,3 +54,22 @@ def test_load_products_missing_field(tmp_path):
     )
     with pytest.raises(ValueError):
         load_products(path)
+
+
+def test_load_products_short_row(tmp_path):
+    path = _write_csv(
+        tmp_path,
+        HEADER + "SKU-0001,零度可乐,饮料,碳酸饮料,可口可乐,3.5,330ml\n",
+    )
+    products = load_products(path)
+    assert products[0].tags == []
+    assert products[0].description == ""
+
+
+def test_load_products_tags_stripped(tmp_path):
+    path = _write_csv(
+        tmp_path,
+        HEADER + "SKU-0001,零度可乐,饮料,碳酸饮料,可口可乐,3.5,330ml,无糖| 低糖 ,\n",
+    )
+    products = load_products(path)
+    assert products[0].tags == ["无糖", "低糖"]

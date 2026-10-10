@@ -105,8 +105,9 @@ def search(query: str, index, client, top_n: int = 5) -> list[Product]:
     if not pool:
         return []
     pool_ids = {p.id for p in pool}
-    vector_ids = [i for i in vector_search(query, index, k=30) if i in pool_ids]
-    bm25_ids = [i for i in bm25_search(query, index, k=30) if i in pool_ids]
+    full = len(index.products)
+    vector_ids = [i for i in vector_search(query, index, k=full) if i in pool_ids][:30]
+    bm25_ids = [i for i in bm25_search(query, index, k=full) if i in pool_ids][:30]
     fused = rrf_fuse([vector_ids, bm25_ids])
     by_id = {p.id: p for p in index.products}
     return [by_id[i] for i in fused[:top_n]]

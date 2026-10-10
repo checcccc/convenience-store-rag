@@ -43,8 +43,8 @@ def load_products(path: str | Path) -> list[Product]:
                     brand=row["brand"].strip(),
                     price=price,
                     spec=row["spec"].strip(),
-                    tags=[t for t in row.get("tags", "").split("|") if t],
-                    description=row.get("description", "").strip(),
+                    tags=[t.strip() for t in (row.get("tags") or "").split("|") if t.strip()],
+                    description=(row.get("description") or "").strip(),
                 )
             )
     return products

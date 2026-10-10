@@ -60,10 +60,13 @@ def generate_summary(query: str, products: list[Product], client) -> GenerationR
     if not products:
         return GenerationResult(summary="没有找到相关商品", products=[])
     messages = build_messages(query, products)
-    resp = client.chat.completions.create(
-        model="deepseek-chat",
-        messages=messages,
-        temperature=0.1,
-        response_format={"type": "json_object"},
-    )
-    return parse_output(resp.choices[0].message.content)
+    try:
+        resp = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=messages,
+            temperature=0.1,
+            response_format={"type": "json_object"},
+        )
+        return parse_output(resp.choices[0].message.content)
+    except Exception:
+        return GenerationResult(summary="生成小结失败，请查看下方商品列表", products=[])

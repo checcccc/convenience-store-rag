@@ -50,3 +50,17 @@ def test_parse_output_valid_json_non_object():
         result = parse_output(text)
         assert result.summary == "未找到合适的商品"
         assert result.products == []
+
+
+def test_generate_summary_client_error(sample_products):
+    def create(**kwargs):
+        raise RuntimeError("network down")
+
+    client = types.SimpleNamespace(
+        chat=types.SimpleNamespace(
+            completions=types.SimpleNamespace(create=create)
+        )
+    )
+    result = generate_summary("无糖", sample_products[:1], client)
+    assert result.summary == "生成小结失败，请查看下方商品列表"
+    assert result.products == []
