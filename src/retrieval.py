@@ -96,14 +96,28 @@ def extract_constraints(query: str, client) -> FilterConstraints:
     )
 
 
+def _validate_constraints(constraints: FilterConstraints, products: list[Product]) -> FilterConstraints:
+    """把不在数据中的 category/brand 约束置空，避免 LLM 误抽导致空池。"""
+    l1 = {p.category_l1 for p in products}
+    l2 = {p.category_l2 for p in products}
+    brands = {p.brand for p in products}
+    return FilterConstraints(
+        category_l1=constraints.category_l1 if constraints.category_l1 in l1 else None,
+        category_l2=constraints.category_l2 if constraints.category_l2 in l2 else None,
+        brand=constraints.brand if constraints.brand in brands else None,
+        price_min=constraints.price_min,
+        price_max=constraints.price_max,
+    )
+
+
 def search(query: str, index, client, top_n: int = 5) -> list[Product]:
     """filter-then-rank 编排：空白 query 返回空；硬过滤 → 池内向量+BM25 → RRF → top_n。"""
     if not query.strip():
         return []
-    constraints = extract_constraints(query, client)
+    constraints = _validate_constraints(extract_constraints(query, client), index.products)
     pool = filter_products(index.products, constraints)
     if not pool:
-        return []
+        pool = index.products  # 约束过严导致空池：兜底全量召回
     pool_ids = {p.id for p in pool}
     full = len(index.products)
     vector_ids = [i for i in vector_search(query, index, k=full) if i in pool_ids][:30]

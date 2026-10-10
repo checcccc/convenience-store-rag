@@ -108,6 +108,16 @@ def test_extract_constraints_valid_json_non_object():
     assert c == FilterConstraints()
 
 
+def test_search_ignores_invalid_category(sample_products, fake_embedder):
+    index = build_index(sample_products, fake_embedder)
+    # LLM 误把"无糖饮料"当小类（数据里无此小类），应忽略它、保留大类+价格过滤
+    client = _fake_client('{"category_l1": "饮料", "category_l2": "无糖饮料", "price_max": 5}')
+    result = search("5元以下的无糖饮料", index, client, top_n=5)
+    assert result
+    assert all(p.category_l1 == "饮料" for p in result)
+    assert all(p.price <= 5.0 for p in result)
+
+
 def test_search_filter_then_rank_not_dropped():
     products = [
         Product(f"SKU-N{i:03d}", f"商品{i}", "日用品", "杂项", "杂牌", 1.0, "", [], "")
