@@ -99,3 +99,9 @@ def test_search_empty_query(sample_products, fake_embedder):
     index = build_index(sample_products, fake_embedder)
     result = search("   ", index, None)
     assert result == []
+
+
+def test_extract_constraints_valid_json_non_object():
+    client = _fake_client("null")
+    c = extract_constraints("随便", client)
+    assert c == FilterConstraints()

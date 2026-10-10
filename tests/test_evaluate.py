@@ -20,3 +20,10 @@ def test_evaluate_perfect_recall(sample_products, fake_embedder):
     result = evaluate(index, _empty_client(), queries, k=5)
     assert result["recall_at_k"] == 1.0
     assert result["mrr"] == 1.0
+
+
+def test_evaluate_partial_recall(sample_products, fake_embedder):
+    index = build_index(sample_products, fake_embedder)
+    queries = [{"query": "零度可乐", "expected_ids": ["SKU-0001", "SKU-0002", "SKU-0003"]}]
+    result = evaluate(index, _empty_client(), queries, k=1)
+    assert abs(result["recall_at_k"] - 1.0 / 3.0) < 1e-9

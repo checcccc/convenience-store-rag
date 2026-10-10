@@ -78,6 +78,9 @@ def extract_constraints(query: str, client) -> FilterConstraints:
     except Exception:
         return FilterConstraints()
 
+    if not isinstance(data, dict):
+        return FilterConstraints()
+
     def _to_float(v):
         try:
             return float(v) if v is not None else None

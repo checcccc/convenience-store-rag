@@ -44,6 +44,8 @@ def parse_output(text: str) -> GenerationResult:
         data = json.loads(text)
     except (json.JSONDecodeError, TypeError):
         return GenerationResult(summary="未找到合适的商品", products=[])
+    if not isinstance(data, dict):
+        return GenerationResult(summary="未找到合适的商品", products=[])
     summary = data.get("summary")
     products = data.get("products", [])
     if not isinstance(summary, str) or not summary:

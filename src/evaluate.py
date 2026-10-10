@@ -10,8 +10,8 @@ def evaluate(index, client, queries: list[dict], k: int = 5) -> dict:
     for q in queries:
         ids = [p.id for p in search(q["query"], index, client, top_n=k)]
         expected = q["expected_ids"]
-        hit = any(e in ids for e in expected)
-        recalls.append(1.0 if hit else 0.0)
+        hits = len({e for e in expected if e in ids})
+        recalls.append(hits / (len(expected) or 1))
         rank = next((i for i, pid in enumerate(ids, start=1) if pid in expected), None)
         mrrs.append(1.0 / rank if rank else 0.0)
     n = len(queries) or 1

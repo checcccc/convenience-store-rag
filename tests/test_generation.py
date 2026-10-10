@@ -43,3 +43,10 @@ def test_generate_summary_parses_client_output(sample_products):
     )
     result = generate_summary("无糖", sample_products[:1], client)
     assert result.summary == "为你找到2款商品"
+
+
+def test_parse_output_valid_json_non_object():
+    for text in ["null", "[]", '"text"', "123"]:
+        result = parse_output(text)
+        assert result.summary == "未找到合适的商品"
+        assert result.products == []
