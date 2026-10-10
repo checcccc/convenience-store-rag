@@ -1,5 +1,5 @@
 from src.data_model import Product
-from src.ingestion import build_searchable_text, tokenize
+from src.ingestion import build_index, build_searchable_text, tokenize
 
 
 def test_build_searchable_text():
@@ -24,3 +24,11 @@ def test_tokenize_chinese():
     tokens = tokenize("无糖可乐")
     assert len(tokens) > 0
     assert all(t.strip() for t in tokens)
+
+
+def test_build_index_shapes(sample_products, fake_embedder):
+    index = build_index(sample_products, fake_embedder)
+    assert len(index.searchable_texts) == len(sample_products)
+    assert len(index.tokenized_texts) == len(sample_products)
+    assert index.bm25 is not None
+    assert index.collection.count() == len(sample_products)

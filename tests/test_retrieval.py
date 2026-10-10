@@ -2,7 +2,14 @@ import types
 
 from rank_bm25 import BM25Okapi
 
-from src.retrieval import FilterConstraints, bm25_search, filter_products, rrf_fuse
+from src.ingestion import build_index
+from src.retrieval import (
+    FilterConstraints,
+    bm25_search,
+    filter_products,
+    rrf_fuse,
+    vector_search,
+)
 
 
 def test_filter_by_category(sample_products):
@@ -44,3 +51,9 @@ def test_bm25_search_ranking(sample_products):
     index = types.SimpleNamespace(bm25=BM25Okapi(corpus), products=sample_products)
     result = bm25_search("可乐", index, k=30)
     assert set(result[:2]) == {"SKU-0001", "SKU-0002"}
+
+
+def test_vector_search_ordering(sample_products, fake_embedder):
+    index = build_index(sample_products, fake_embedder)
+    result = vector_search("零度可乐", index, k=3)
+    assert result[0] == "SKU-0001"

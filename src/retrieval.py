@@ -46,3 +46,11 @@ def bm25_search(query: str, index, k: int = 30) -> list[str]:
     scores = index.bm25.get_scores(tokens)
     order = sorted(range(len(scores)), key=lambda i: -scores[i])
     return [index.products[i].id for i in order[:k]]
+
+
+def vector_search(query: str, index, k: int = 30) -> list[str]:
+    """向量召回：返回余弦相似度降序的商品 id 列表。"""
+    q = index.embedder.encode([query])
+    n = min(k, index.collection.count())
+    res = index.collection.query(query_embeddings=q, n_results=n)
+    return res["ids"][0]

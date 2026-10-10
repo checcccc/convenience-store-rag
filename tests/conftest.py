@@ -28,3 +28,13 @@ def sample_products() -> list[Product]:
         Product("SKU-0021", "康师傅红烧牛肉面 桶装", "速食", "方便面", "康师傅", 4.5, "110g",
                 ["辣", "方便", "速食"], "经典红烧牛肉面"),
     ]
+
+
+@pytest.fixture
+def fake_embedder():
+    """确定性 Fake 嵌入器：含"零度可乐"的文本 → [1,0]，其余 → [0,1]。"""
+    class _FakeEmbedder:
+        def encode(self, texts):
+            return [[1.0, 0.0] if "零度可乐" in t else [0.0, 1.0] for t in texts]
+
+    return _FakeEmbedder()
