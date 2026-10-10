@@ -55,8 +55,17 @@ def parse_output(text: str) -> GenerationResult:
     return GenerationResult(summary=summary, products=products)
 
 
+def fallback_summary(products: list[Product]) -> str:
+    """离线确定性小结：列出检索到的商品名，不调用 LLM。"""
+    if not products:
+        return "没有找到相关商品"
+    names = "、".join(p.name for p in products[:3])
+    more = "等" if len(products) > 3 else ""
+    return f"为你找到 {len(products)} 款相关商品：{names}{more}"
+
+
 def generate_summary(query: str, products: list[Product], client) -> GenerationResult:
-    """空候选不调 LLM 直接返回；否则调 client 生成并解析。"""
+    """空候选不调 LLM 直接返回；否则调 client 生成并解析，失败回退确定性小结。"""
     if not products:
         return GenerationResult(summary="没有找到相关商品", products=[])
     messages = build_messages(query, products)
@@ -69,4 +78,4 @@ def generate_summary(query: str, products: list[Product], client) -> GenerationR
         )
         return parse_output(resp.choices[0].message.content)
     except Exception:
-        return GenerationResult(summary="生成小结失败，请查看下方商品列表", products=[])
+        return GenerationResult(summary=fallback_summary(products), products=[])

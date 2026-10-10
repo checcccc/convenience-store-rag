@@ -62,5 +62,5 @@ def test_generate_summary_client_error(sample_products):
         )
     )
     result = generate_summary("无糖", sample_products[:1], client)
-    assert result.summary == "生成小结失败，请查看下方商品列表"
+    assert result.summary == "为你找到 1 款相关商品：零度可乐 330ml 罐装"
     assert result.products == []

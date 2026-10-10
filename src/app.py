@@ -21,12 +21,15 @@ def build_embedder(model: str = "BAAI/bge-small-zh-v1.5"):
 
 
 def build_client():
-    """惰性构建国内 LLM 客户端（OpenAI 兼容 API）。"""
+    """惰性构建国内 LLM 客户端（OpenAI 兼容 API）；无 key 返回 None 走离线模式。"""
+    api_key = os.environ.get("LLM_API_KEY", "")
+    if not api_key:
+        return None
     from openai import OpenAI
 
     return OpenAI(
         base_url=os.environ.get("LLM_BASE_URL", "https://api.deepseek.com"),
-        api_key=os.environ.get("LLM_API_KEY", ""),
+        api_key=api_key,
     )
 
 

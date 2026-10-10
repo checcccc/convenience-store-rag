@@ -1,6 +1,6 @@
 import types
 
-from src.app import answer
+from src.app import answer, build_client
 from src.ingestion import build_index
 
 
@@ -35,3 +35,8 @@ def test_answer_empty_query(sample_products, fake_embedder):
     index = build_index(sample_products, fake_embedder)
     result = answer("   ", index, _make_client())
     assert result == {"summary": "没有找到相关商品", "products": []}
+
+
+def test_build_client_returns_none_without_key(monkeypatch):
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    assert build_client() is None
